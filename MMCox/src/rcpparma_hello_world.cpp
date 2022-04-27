@@ -98,12 +98,19 @@ arma::mat WeightFunc(const arma::mat&rules,const arma::vec&beta,const double&the
     
 }
 
+// [[Rcpp::export]]
+arma::umat testfind(const arma::mat&testmat){
+    arma::umat result=find(testmat.col(0)==2);
+    return result;
+}
 
-
-
-
-
-
+// [[Rcpp::export]]
+arma::mat findmat(const arma::mat&testmat){
+    arma::umat result=find(testmat.col(0)==1);
+    arma::mat final=testmat.rows(result);
+    arma::mat B = arma::prod(final,0);
+    return B;
+}
 
 
 
