@@ -129,9 +129,9 @@ arma::mat Updateonce(const arma::mat&rules,const arma::mat&beta,const double&the
     arma::mat LambdaL=repmat(trans(trans(gamma)*tL),1,order);
     arma::mat LambdaLR=repmat(trans(trans(gamma)*tLR),1,order);
     
-    arma::mat expL=exp(-LambdaL%ParPart);
-    arma::mat expR=exp(-LambdaR%ParPart);
-    arma::mat expLR=exp(-LambdaLR%ParPart);
+    arma::mat expL=LambdaL%ParPart;
+    arma::mat expR=LambdaR%ParPart;
+    arma::mat expLR=LambdaLR%ParPart;
     
     arma::mat CubegammaR=repmat(trans(pow(gamma,3)),n,1)%trans(tR);
     arma::mat CubegammaLR=repmat(trans(pow(gamma,3)),n,1)%trans(tLR);
@@ -141,6 +141,19 @@ arma::mat Updateonce(const arma::mat&rules,const arma::mat&beta,const double&the
     arma::mat Term2=trans((1-repmat(Data.col(3),1,order)-repmat(Data.col(4),1,order))%pow((1+expLR),-1)%pow((LambdaLR),-1));
     arma::mat Term3=trans((1-repmat(Data.col(4),1,order))%ParPart);
     arma::mat Amat(n,m),Bmat(n,m);
+    
+    
+    arma::mat FirstBigMat=repmat(Data.col(3),1,order)%pow((1+expR),-1)+
+                      (1-repmat(Data.col(3),1,order)-repmat(Data.col(4),1,order))%pow((1+expLR),-1)-
+                      (1-repmat(Data.col(3),1,order))%expL;
+    
+    arma::mat SecondBigMat=repmat(Data.col(3),1,order)%pow((1+expR),-1)+
+        (1-repmat(Data.col(3),1,order)-repmat(Data.col(4),1,order))%pow((1+expLR),-1)+
+        (1-repmat(Data.col(3),1,order))%expL;
+        
+        arma::mat FirstDerivMat(n,beta.n_rows+1);
+        arma::mat SecondDeriv=arma::zeros(beta.n_rows+1,beta.n_rows+1);
+        arma::mat SecondDerivMat=arma::zeros(beta.n_rows+1,beta.n_rows+1);
     for(int i=0;i<n;i++){
         arma::umat rowindices=find(Data.col(0)==(i+1));
         arma::mat AclusterI=Term1.cols(rowindices)*CubegammaR.rows(rowindices)+
@@ -148,9 +161,39 @@ arma::mat Updateonce(const arma::mat&rules,const arma::mat&beta,const double&the
         arma::mat BclusterI=Term3.cols(rowindices)*InversgammaL.rows(rowindices);
         Amat.row(i)=WeightMat.row(i)*AclusterI;
         Bmat.row(i)=WeightMat.row(i)*BclusterI;
+        
+        arma::mat FirstBigMatij=FirstBigMat.rows(rowindices);
+        arma::mat SecondBigMatij=SecondBigMat.rows(rowindices);
+        arma::mat FirstDerivI(order,beta.n_rows+1);
+        for(int r=0;r<order;r++){
+            
+            arma::mat Xij=covariate.rows(rowindices);
+            arma::vec onesvec=arma::ones(Xij.n_rows);
+            arma::mat Wijr=join_rows(Xij,rules(r,0)*onesvec*theta);
+            FirstDerivI.row(r)=FirstBigMatij.row(r)*Wijr;
+            arma::mat SecondDerivI=arma::zeros(beta.n_rows+1,beta.n_rows+1);
+            
+            for(int j=0;j<Xij.n_rows;j++){
+                SecondDerivI=SecondDerivI+SecondBigMatij(j,r)*(trans(Wijr.row(j))*Wijr.row(j));
+            }
+            SecondDeriv=SecondDeriv-2*WeightMat(i,r)*SecondDerivI;
+            
+            
+        }
+        FirstDerivMat.row(i)=WeightMat.row(i)*FirstDerivI;
+        
+        
     }
-    arma::mat result=pow((trans(sum(Amat,0))%pow(trans(sum(Bmat,0)),-1)),1/4);
-    return result;
+    arma::mat FirstDeriv=trans(sum(FirstDerivMat,0));
+    SecondDeriv(beta.n_rows,beta.n_rows)=SecondDeriv(beta.n_rows,beta.n_rows)+FirstDeriv(beta.n_rows);
+    arma::mat updategamma=pow((trans(sum(Amat,0))%pow(trans(sum(Bmat,0)),-1)),1/4);
+    arma::vec lastpar(beta.n_rows+1);
+    lastpar.subvec(0,beta.n_rows-1)=beta;
+    lastpar(beta.n_rows)=std::log(theta);
+
+    arma::vec updatePar=lastpar-solve(SecondDeriv,FirstDeriv);
+    updatePar(beta.n_rows)=std::exp(updatePar(beta.n_rows));
+    return updategamma;
     
 }
 
