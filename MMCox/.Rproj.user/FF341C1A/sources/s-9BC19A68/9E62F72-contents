@@ -205,7 +205,7 @@ arma::field<arma::mat> Updateonce(const arma::mat&rules,const arma::mat&beta,con
 
 
 // [[Rcpp::export]]
-arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules){
+arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules,const double&Tol){
     int betadim=Data.n_cols-5;
     arma::mat tktemp=sort(unique(join_rows(Data.col(1),Data.col(2))));
     arma::vec tk=tktemp.col(0);
@@ -217,9 +217,22 @@ arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules){
     arma::umat tR=TmatR(join_rows(Data.col(1),Data.col(2)),tk);
     arma::umat tLR=TmatLR(join_rows(Data.col(1),Data.col(2)),tk);
     arma::mat beta0=arma::ones(betadim,1)*0.5;
-    arma::mat gamma=arma::ones(m,0.1);
-    double theta=0.5;
+    arma::mat gamma0=arma::ones(tk.n_elem,0.1);
+    double theta0=0.5;
+    double absdiff=1000;
     
+    arma::mat gammaold=gamma0;
+    arma::mat betaold=beta0;
+    double thetaold=theta0;
+    arma::mat Totalold=join_cols(gammaold,betaold,arma::ones(1,1)*thetaold);
+    do{
+        arma::field<arma::mat> newresult=Updateonce(rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
+
+        arma::mat Totalnew=join_cols(newresult(0),newresult(1));
+        absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
+        
+    } while (absdiff>Tol);
+    return newresult;
 }
 
 
