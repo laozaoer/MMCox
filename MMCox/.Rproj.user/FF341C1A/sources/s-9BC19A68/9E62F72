@@ -4,16 +4,16 @@
     "created" : 1650783385374.000,
     "dirty" : false,
     "encoding" : "UTF-8",
-    "folds" : "18|68|26|0|\n28|68|36|0|\n40|69|48|0|\n51|63|63|0|\n68|61|84|0|\n",
-    "hash" : "0",
+    "folds" : "18|68|26|0|\n28|68|36|0|\n40|69|48|0|\n51|63|63|0|\n",
+    "hash" : "3349940677",
     "id" : "9E62F72",
-    "lastKnownWriteTime" : 1651214714,
-    "last_content_update" : 1651214714362,
+    "lastKnownWriteTime" : 1651217006,
+    "last_content_update" : 1651217006397,
     "path" : "~/GitHub/MMCox/MMCox/src/rcpparma_hello_world.cpp",
     "project_path" : "src/rcpparma_hello_world.cpp",
     "properties" : {
-        "cursorPosition" : "183,8",
-        "scrollLine" : "176"
+        "cursorPosition" : "220,21",
+        "scrollLine" : "201"
     },
     "read_only" : false,
     "read_only_alternatives" : [

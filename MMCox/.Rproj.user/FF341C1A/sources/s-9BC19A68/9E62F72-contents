@@ -115,7 +115,7 @@ arma::mat WeightFunc(const arma::mat&rules,const arma::mat&beta,const double&the
 
 
 // [[Rcpp::export]]
-arma::mat Updateonce(const arma::mat&rules,const arma::mat&beta,const double&theta,const arma::mat&gamma,const arma::mat&Data,
+arma::field<arma::mat> Updateonce(const arma::mat&rules,const arma::mat&beta,const double&theta,const arma::mat&gamma,const arma::mat&Data,
                      const arma::umat&tL,const arma::umat&tR,const arma::umat&tLR){
     arma::mat WeightMat=WeightFunc(rules,beta,theta,gamma,Data,tL,tR);
     arma::mat index=sort(unique(Data.col(0)));
@@ -193,13 +193,34 @@ arma::mat Updateonce(const arma::mat&rules,const arma::mat&beta,const double&the
 
     arma::vec updatePar=lastpar-solve(SecondDeriv,FirstDeriv);
     updatePar(beta.n_rows)=std::exp(updatePar(beta.n_rows));
-    return updategamma;
+    
+    
+    arma::field<arma::mat> result(2);
+    result(0)=updategamma;
+    result(1)=updatePar;
+    return result;
     
 }
 
 
 
-
+// [[Rcpp::export]]
+arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules){
+    int betadim=Data.n_cols-5;
+    arma::mat tktemp=sort(unique(join_rows(Data.col(1),Data.col(2))));
+    arma::vec tk=tktemp.col(0);
+    tk=tk.subvec(1,tk.n_elem-2);
+    arma::mat L=Data.col(1);
+    arma::mat R=Data.col(2);
+    
+    arma::umat tL=TmatL(join_rows(Data.col(1),Data.col(2)),tk);
+    arma::umat tR=TmatR(join_rows(Data.col(1),Data.col(2)),tk);
+    arma::umat tLR=TmatLR(join_rows(Data.col(1),Data.col(2)),tk);
+    arma::mat beta0=arma::ones(betadim,1)*0.5;
+    arma::mat gamma=arma::ones(m,0.1);
+    double theta=0.5;
+    
+}
 
 
 
