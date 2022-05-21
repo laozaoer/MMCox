@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1653015588643.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "30|107|119|0|\n",
+    "hash" : "0",
+    "id" : "1A5DC431",
+    "lastKnownWriteTime" : 1653106171,
+    "last_content_update" : 1653107870907,
+    "path" : "~/GitHub/MMCox/MMCox/src/ff.cpp",
+    "project_path" : "src/ff.cpp",
+    "properties" : {
+        "cursorPosition" : "28,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled2"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "cpp"
+}

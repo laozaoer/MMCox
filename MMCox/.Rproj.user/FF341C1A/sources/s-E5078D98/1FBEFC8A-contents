@@ -134,10 +134,6 @@ Data_trans=function(data){
   return(result)
 }
 
-H=function(t) log(1+t)+t^(3/2)
-data=SIM_DATA(r=0,beta=c(-1,0.3,0.5),gamma=c(0),theta=1,n=200,H=H,up.quantile=0.85,
-              par_size=c(exp(1.7),1,8)) 
-myD=Data_trans(data = data)
               
 
 
@@ -167,8 +163,30 @@ b=WeightFunc(myrules,beta,theta,gamma,myD,TL,TR)
 
 a=UpdateonceNew(myrules,beta,theta,gamma,myD,TL,TR,TLR)
 
+H=function(t) log(1+t)+t^(3/2)
+data=SIM_DATA(r=0,beta=c(-1,1,0.5),gamma=c(0),theta=0.5,n=200,H=H,up.quantile=0.85,
+              par_size=c(exp(1.7),1,8)) 
+myD=Data_trans(data = data)
 
+begin=Sys.time()
 b=MainFunc(myD,myrules,0.0001)
+end=Sys.time()
+end-begin
+b[[2]]
 
+begin=Sys.time()
+b2=MainFuncClosd(myD,myrules,0.0001)
+end=Sys.time()
+end-begin
+b2[[2]]
 
 Testsort(myD)
+
+
+
+
+
+
+
+
+a=matrix(1:9,3,3)
