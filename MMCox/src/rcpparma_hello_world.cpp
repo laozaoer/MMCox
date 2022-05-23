@@ -745,9 +745,49 @@ double LogProfileLikeli(const arma::uword&Indicator,const arma::mat&Data,const a
 
 // [[Rcpp::export]]
 double FindSolution(const arma::uword&Indicator,const arma::mat&Data,const arma::mat&rules,const double&Tol,const arma::mat&beta,const double&theta,const arma::mat&gamma,
-                    const double&Tol2,const double&TheConst){
+                    const double&Tol2,const double&TheConst,const arma::vec&Initial){
     if(Indicator<=beta.n_rows){
-        
+        double Initial_L=Initial(0);
+        double Initial_R=Initial(1);
+        double Initial_Ave;
+        arma::mat beta0=beta;
+        arma::mat gamma0=gamma;
+        double theta0=theta;
+        do{
+            Initial_Ave=(Initial_L+Initial_R)/2;
+            beta0(Indicator-1,0)=Initial_Ave;
+            double plAve;
+            plAve=LogProfileLikeli(Indicator,Data,rules,Tol,beta0,theta0,gamma0)-TheConst;
+            if(plAve<0){
+                Initial_L=Initial_Ave;
+            }
+            else{
+                Initial_R=Initial_Ave;
+            }
+            
+        } while ((Initial_R-Initial_L)>Tol2);
+        return Initial_Ave;
+    }
+    else{
+        double Initial_L=Initial(0);
+        double Initial_R=Initial(1);
+        double Initial_Ave;
+        arma::mat beta0=beta;
+        arma::mat gamma0=gamma;
+        double theta0=theta;
+        do{
+            Initial_Ave=(Initial_L+Initial_R)/2;
+            theta0=Initial_Ave;
+            double plAve=LogProfileLikeli(Indicator,Data,rules,Tol,beta0,theta0,gamma0)-TheConst;
+            if(plAve<0){
+                Initial_L=Initial_Ave;
+            }
+            else{
+                Initial_R=Initial_Ave;
+            }
+            
+        } while ((Initial_R-Initial_L)>Tol2);
+        return Initial_Ave;
     }
 }
 
