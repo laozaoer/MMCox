@@ -164,29 +164,41 @@ b=WeightFunc(myrules,beta,theta,gamma,myD,TL,TR)
 a=UpdateonceNew(myrules,beta,theta,gamma,myD,TL,TR,TLR)
 
 H=function(t) log(1+t)+t^(3/2)
-data=SIM_DATA(r=0,beta=c(-1,1,0.5),gamma=c(0),theta=0.5,n=200,H=H,up.quantile=0.85,
+data=SIM_DATA(r=0,beta=c(-1,1,0.5),gamma=c(0),theta=0.5,n=50,H=H,up.quantile=0.85,
               par_size=c(exp(1.7),1,8)) 
 myD=Data_trans(data = data)
 
 begin=Sys.time()
-b=MainFunc(myD,myrules,0.0001)
+b=MainFunc(myD,myrules,0.001)
 end=Sys.time()
 end-begin
 b[[2]]
+b[[4]]
 
 begin=Sys.time()
-b2=MainFuncClosd(myD,myrules,0.0001)
+b2=MainFuncClosd(myD,myrules,0.001)
 end=Sys.time()
 end-begin
 b2[[2]]
+b2[[4]]
 
-Testsort(myD)
+tktemp=sort(unique(c(myD[,2],myD[,3])))
+tk=tktemp
+tk=tk[-1]
+tk=tk[tk<max(myD[,2])]
+gamma=rep(0.1,length(tk))
+
+b3=LogProfileLikeli(4,myD,myrules,0.001,as.matrix(c(-1,1,1.0)),1.0,as.matrix(gamma))
+# 
+# Testsort(myD)
 
 
 
 
 
+TL=TmatL(myD[,2:3],tk)
+TR=TmatR(myD[,2:3],tk)
+TLR=TmatLR(myD[,2:3],tk)
+a=UpdateonceProfileTheta(myrules,as.matrix(c(-1,1,0.5)),0.5,as.matrix(gamma),myD,TL,TR,TLR)
 
 
-
-a=matrix(1:9,3,3)

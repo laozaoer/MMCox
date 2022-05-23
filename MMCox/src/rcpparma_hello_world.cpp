@@ -315,7 +315,8 @@ arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules,const
     arma::mat tktemp=sort(unique(join_cols(Data.col(1),Data.col(2))));
     arma::vec tk=tktemp.col(0);
     tk=tk.subvec(1,tk.n_elem-2);
-    arma::uvec tkfinity=find(tk<std::pow(10,10));
+    double maxL=Data.col(1).max();
+    arma::uvec tkfinity=find(tk<(maxL));
     tk=tk(tkfinity);
     
     arma::mat L=Data.col(1);
@@ -327,7 +328,7 @@ arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules,const
     arma::mat beta0=arma::ones(betadim,1)*0.5;
     arma::mat gamma0=arma::ones(tk.n_elem,1)*0.1;
     double theta0=0.5;
-    // double absdiff=1000;
+    double absdiff=1000;
     arma::mat betatheta;
     // arma::mat gammaold=gamma0;
     // arma::mat betaold=beta0;
@@ -335,19 +336,29 @@ arma::field<arma::mat> MainFunc(const arma::mat&Data,const arma::mat&rules,const
     // arma::mat Totalold=join_cols(gammaold,betaold,arma::ones(1,1)*thetaold);
     arma::field<arma::mat> newresult;
     int iter=1;
-    do{
+    do{ 
+        arma::mat oldbeta=beta0;
+        double oldtheta=theta0;
+        arma::mat oldgamma=gamma0;
         newresult=UpdateonceNew(rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
         gamma0=newresult(0);
         betatheta=newresult(1);
         beta0=betatheta.submat(0,0,betadim-1,0);
         theta0=betatheta(betadim,0);
-        // arma::mat Totalnew=join_cols(newresult(0),newresult(1));
-        // absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
+        arma::mat Totalnew=newresult(1);
+        arma::mat Totalold=join_cols(oldbeta,arma::ones(1,1)*oldtheta);
+        absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
         iter=iter+1;
         // std::cout<<iter;
+        // std::cout<<absdiff;
         
-    } while (iter<200);
-    return newresult;
+    } while (iter<500&absdiff>Tol);
+    arma::field<arma::mat> finalresult(4);
+    finalresult(0)=newresult(0);
+    finalresult(1)=newresult(1);
+    finalresult(2)=arma::ones(1,1)*absdiff;
+    finalresult(3)=arma::ones(1,1)*iter;
+    return finalresult;
 }
 
 
@@ -359,7 +370,7 @@ arma::field<arma::mat> MainFuncClosd(const arma::mat&Data,const arma::mat&rules,
     arma::vec tk=tktemp.col(0);
     tk=tk.subvec(1,tk.n_elem-2);
     double maxL=Data.col(1).max();
-    arma::uvec tkfinity=find(tk<=(maxL));
+    arma::uvec tkfinity=find(tk<(maxL));
     tk=tk(tkfinity);
     
     arma::mat L=Data.col(1);
@@ -371,7 +382,7 @@ arma::field<arma::mat> MainFuncClosd(const arma::mat&Data,const arma::mat&rules,
     arma::mat beta0=arma::ones(betadim,1)*0.5;
     arma::mat gamma0=arma::ones(tk.n_elem,1)*0.1;
     double theta0=0.5;
-    // double absdiff=1000;
+    double absdiff=1000;
     arma::mat betatheta;
     // arma::mat gammaold=gamma0;
     // arma::mat betaold=beta0;
@@ -379,19 +390,29 @@ arma::field<arma::mat> MainFuncClosd(const arma::mat&Data,const arma::mat&rules,
     // arma::mat Totalold=join_cols(gammaold,betaold,arma::ones(1,1)*thetaold);
     arma::field<arma::mat> newresult;
     int iter=1;
-    do{
-        newresult=UpdateonceNew(rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
+    do{ 
+        arma::mat oldbeta=beta0;
+        double oldtheta=theta0;
+        arma::mat oldgamma=gamma0;
+        newresult=Updateonce(rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
         gamma0=newresult(0);
         betatheta=newresult(1);
         beta0=betatheta.submat(0,0,betadim-1,0);
         theta0=betatheta(betadim,0);
-        // arma::mat Totalnew=join_cols(newresult(0),newresult(1));
-        // absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
+        arma::mat Totalnew=newresult(1);
+        arma::mat Totalold=join_cols(oldbeta,arma::ones(1,1)*oldtheta);
+        absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
         iter=iter+1;
         // std::cout<<iter;
+        // std::cout<<absdiff;
         
-    } while (iter<200);
-    return newresult;
+    } while (iter<500&absdiff>Tol);
+    arma::field<arma::mat> finalresult(4);
+    finalresult(0)=newresult(0);
+    finalresult(1)=newresult(1);
+    finalresult(2)=arma::ones(1,1)*absdiff;
+    finalresult(3)=arma::ones(1,1)*iter;
+    return finalresult;
 }
 
 
@@ -409,7 +430,6 @@ arma::field<arma::mat> UpdateonceProfileBeta(const arma::uword&Indicator,const a
     Deletecovariate.shed_col(Indicator-1);
     arma::mat betaX=covariate*beta;
     arma::mat ParPart=exp(repmat(betaX,1,order)+repmat(trans(theta*rules.col(0)),Data.n_rows,1));
-    
     arma::mat LambdaR=repmat(trans(trans(gamma)*tR),1,order);
     arma::mat LambdaL=repmat(trans(trans(gamma)*tL),1,order);
     arma::mat LambdaLR=repmat(trans(trans(gamma)*tLR),1,order);
@@ -439,6 +459,7 @@ arma::field<arma::mat> UpdateonceProfileBeta(const arma::uword&Indicator,const a
     arma::mat FirstDerivMat(n,beta.n_rows);
     arma::mat SecondDeriv=arma::zeros(beta.n_rows,beta.n_rows);
     arma::mat SecondDerivMat=arma::zeros(beta.n_rows,beta.n_rows);
+   
     for(int i=0;i<n;i++){
         arma::umat rowindices=find(Data.col(0)==(i+1));
         arma::mat AclusterI=Term1.cols(rowindices)*CubegammaR.rows(rowindices)+
@@ -477,7 +498,7 @@ arma::field<arma::mat> UpdateonceProfileBeta(const arma::uword&Indicator,const a
     
     arma::vec lastpar(beta.n_rows);
     arma::mat Deletebeta=beta;
-    Deletebeta.shed_col(Indicator-1);
+    Deletebeta.shed_row(Indicator-1);
     lastpar.subvec(0,beta.n_rows-2)=Deletebeta;
     lastpar(beta.n_rows-1)=std::log(theta);
     
@@ -575,8 +596,8 @@ arma::field<arma::mat> UpdateonceProfileTheta(const arma::mat&rules,const arma::
     arma::vec lastpar(beta.n_rows+1);
     lastpar.subvec(0,beta.n_rows-1)=beta;
     // lastpar(beta.n_rows)=std::log(theta);
-    
-    arma::vec updatePar=lastpar.subvec(0,beta.n_rows-1)-solve(SecondDeriv,FirstDeriv);
+    arma::vec updatePar(beta.n_rows+1);
+    updatePar.subvec(0,beta.n_rows-1)=lastpar.subvec(0,beta.n_rows-1)-solve(SecondDeriv,FirstDeriv);
     updatePar(beta.n_rows)=theta;
     
     
@@ -586,6 +607,123 @@ arma::field<arma::mat> UpdateonceProfileTheta(const arma::mat&rules,const arma::
     return result;
     
 }
+
+
+
+// [[Rcpp::export]]
+arma::field<arma::mat> LogProfileLikeli(const arma::uword&Indicator,const arma::mat&Data,const arma::mat&rules,const double&Tol,const arma::mat&beta,const double&theta,const arma::mat&gamma){
+    if(Indicator<=beta.n_rows){
+        int betadim=Data.n_cols-5;
+        
+        arma::mat tktemp=sort(unique(join_cols(Data.col(1),Data.col(2))));
+        arma::vec tk=tktemp.col(0);
+        tk=tk.subvec(1,tk.n_elem-2);
+        double maxL=Data.col(1).max();
+        arma::uvec tkfinity=find(tk<(maxL));
+        tk=tk(tkfinity);
+
+        arma::mat L=Data.col(1);
+        arma::mat R=Data.col(2);
+
+        arma::umat tL=TmatL(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::umat tR=TmatR(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::umat tLR=TmatLR(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::mat beta0=beta;
+        arma::mat gamma0=gamma;
+        double theta0=theta;
+        double absdiff=1000;
+        arma::mat betatheta;
+        // arma::mat gammaold=gamma0;
+        // arma::mat betaold=beta0;
+        // double thetaold=theta0;
+        // arma::mat Totalold=join_cols(gammaold,betaold,arma::ones(1,1)*thetaold);
+        arma::field<arma::mat> newresult;
+        int iter=1;
+        do{
+            arma::mat oldbeta=beta0;
+            double oldtheta=theta0;
+            arma::mat oldgamma=gamma0;
+            newresult=UpdateonceProfileBeta(Indicator,rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
+            gamma0=newresult(0);
+            betatheta=newresult(1);
+            beta0=betatheta.submat(0,0,betadim-1,0);
+            theta0=betatheta(betadim,0);
+            arma::mat Totalnew=newresult(1);
+            arma::mat Totalold=join_cols(oldbeta,arma::ones(1,1)*oldtheta);
+            absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
+            iter=iter+1;
+            // std::cout<<iter;
+            // std::cout<<absdiff;
+
+        } while (iter<500&absdiff>Tol);
+        arma::field<arma::mat> finalresult(4);
+        finalresult(0)=newresult(0);
+        finalresult(1)=newresult(1);
+        finalresult(2)=arma::ones(1,1)*absdiff;
+        finalresult(3)=arma::ones(1,1)*iter;
+        return finalresult;
+
+    }
+    else{
+        int betadim=Data.n_cols-5;
+        
+        arma::mat tktemp=sort(unique(join_cols(Data.col(1),Data.col(2))));
+        arma::vec tk=tktemp.col(0);
+        tk=tk.subvec(1,tk.n_elem-2);
+        double maxL=Data.col(1).max();
+        arma::uvec tkfinity=find(tk<(maxL));
+        tk=tk(tkfinity);
+        
+        arma::mat L=Data.col(1);
+        arma::mat R=Data.col(2);
+        
+        arma::umat tL=TmatL(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::umat tR=TmatR(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::umat tLR=TmatLR(join_rows(Data.col(1),Data.col(2)),tk);
+        arma::mat beta0=beta;
+        arma::mat gamma0=gamma;
+        double theta0=theta;
+        double absdiff=1000;
+        arma::mat betatheta;
+        // arma::mat gammaold=gamma0;
+        // arma::mat betaold=beta0;
+        // double thetaold=theta0;
+        // arma::mat Totalold=join_cols(gammaold,betaold,arma::ones(1,1)*thetaold);
+        arma::field<arma::mat> newresult;
+        int iter=1;
+        do{
+            arma::mat oldbeta=beta0;
+            double oldtheta=theta0;
+            arma::mat oldgamma=gamma0;
+            newresult=UpdateonceProfileTheta(rules,beta0,theta0,gamma0,Data,tL,tR,tLR);
+            gamma0=newresult(0);
+            betatheta=newresult(1);
+            beta0=betatheta.submat(0,0,betadim-1,0);
+            theta0=betatheta(betadim,0);
+            arma::mat Totalnew=newresult(1);
+            arma::mat Totalold=join_cols(oldbeta,arma::ones(1,1)*oldtheta);
+            absdiff=accu(abs((Totalold-Totalnew)%pow(Totalold,-1)));
+            iter=iter+1;
+            // std::cout<<iter;
+            // std::cout<<absdiff;
+            
+        } while (iter<500&absdiff>Tol);
+        arma::field<arma::mat> finalresult(4);
+        finalresult(0)=newresult(0);
+        finalresult(1)=newresult(1);
+        finalresult(2)=arma::ones(1,1)*absdiff;
+        finalresult(3)=arma::ones(1,1)*iter;
+        return finalresult;
+        
+    }
+    
+}
+
+
+
+
+
+
 
 
 
