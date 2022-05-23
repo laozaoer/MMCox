@@ -119,7 +119,29 @@ arma::mat WeightFunc(const arma::mat&rules,const arma::mat&beta,const double&the
 
 
 
-
+// [[Rcpp::export]]
+double LogLikeliValue(const arma::mat&rules,const arma::mat&beta,const double&theta,const arma::mat&gamma,const arma::mat&Data,
+                      const arma::umat&tL,const arma::umat&tR){
+    arma::vec normvec=arma::normpdf(rules.col(0));
+    arma::vec weightvec=rules.col(1)%exp(pow(rules.col(0),2))%normvec;
+    int order=rules.n_rows;
+    // arma::mat Oriweight=repmat(trans(weightvec),Data.n_rows,1);
+    arma::mat index=sort(unique(Data.col(0)));
+    int n=index.n_rows;
+    arma::mat LikelihoodMat=Likelihood_rules(rules,beta,theta,gamma,Data,tL,tR);
+    // arma::mat LikeliTimesWeight=repmat(trans(weightvec),Data.n_rows,1);
+    arma::vec resultvec=arma::zeros(n);
+    for(int i=1;i<(n+1);i++){
+        arma::umat rowindices=find(Data.col(0)==i);
+        arma::mat Eachcluster=LikelihoodMat.rows(rowindices);
+        arma::mat Rowprod = arma::prod(Eachcluster,0);
+        arma::mat Finalweight=Rowprod%trans(weightvec);
+        resultvec(i-1)=Finalweight(0,0);
+    }
+    double value=sum(resultvec);
+    return std::log(value);
+    
+}
 
 
 
@@ -611,7 +633,7 @@ arma::field<arma::mat> UpdateonceProfileTheta(const arma::mat&rules,const arma::
 
 
 // [[Rcpp::export]]
-arma::field<arma::mat> LogProfileLikeli(const arma::uword&Indicator,const arma::mat&Data,const arma::mat&rules,const double&Tol,const arma::mat&beta,const double&theta,const arma::mat&gamma){
+double LogProfileLikeli(const arma::uword&Indicator,const arma::mat&Data,const arma::mat&rules,const double&Tol,const arma::mat&beta,const double&theta,const arma::mat&gamma){
     if(Indicator<=beta.n_rows){
         int betadim=Data.n_cols-5;
         
@@ -661,8 +683,9 @@ arma::field<arma::mat> LogProfileLikeli(const arma::uword&Indicator,const arma::
         finalresult(1)=newresult(1);
         finalresult(2)=arma::ones(1,1)*absdiff;
         finalresult(3)=arma::ones(1,1)*iter;
-        return finalresult;
-
+        // return finalresult;
+        double LogLike=LogLikeliValue(rules,beta0,theta0,finalresult(0),Data,tL,tR);
+        return LogLike;
     }
     else{
         int betadim=Data.n_cols-5;
@@ -713,7 +736,8 @@ arma::field<arma::mat> LogProfileLikeli(const arma::uword&Indicator,const arma::
         finalresult(1)=newresult(1);
         finalresult(2)=arma::ones(1,1)*absdiff;
         finalresult(3)=arma::ones(1,1)*iter;
-        return finalresult;
+        double LogLike=LogLikeliValue(rules,beta0,theta0,finalresult(0),Data,tL,tR);
+            return LogLike;
         
     }
     

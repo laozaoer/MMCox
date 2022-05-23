@@ -152,8 +152,8 @@ gamma=as.matrix(rep(0.001,length(tk)))
 
 
 library(gaussquad)
-myrules=gaussquad::hermite.h.quadrature.rules(5,normalized=FALSE)
-myrules=as.matrix(myrules[[5]])
+myrules=gaussquad::hermite.h.quadrature.rules(30,normalized=FALSE)
+myrules=as.matrix(myrules[[30]])
 
 
 
@@ -188,7 +188,7 @@ tk=tk[-1]
 tk=tk[tk<max(myD[,2])]
 gamma=rep(0.1,length(tk))
 
-b3=LogProfileLikeli(4,myD,myrules,0.001,as.matrix(c(-1,1,1.0)),1.0,as.matrix(gamma))
+b3=LogProfileLikeli(2,myD,myrules,0.001,as.matrix(c(-1,0.5,1.0)),1.0,as.matrix(gamma))
 # 
 # Testsort(myD)
 
@@ -200,5 +200,5 @@ TL=TmatL(myD[,2:3],tk)
 TR=TmatR(myD[,2:3],tk)
 TLR=TmatLR(myD[,2:3],tk)
 a=UpdateonceProfileTheta(myrules,as.matrix(c(-1,1,0.5)),0.5,as.matrix(gamma),myD,TL,TR,TLR)
-
+LikeliValue(myrules,as.matrix(c(-1,1,0.5)),0.5,as.matrix(gamma),myD,TL,TR)
 
