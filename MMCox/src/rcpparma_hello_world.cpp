@@ -743,7 +743,13 @@ double LogProfileLikeli(const arma::uword&Indicator,const arma::mat&Data,const a
     
 }
 
-
+// [[Rcpp::export]]
+double FindSolution(const arma::uword&Indicator,const arma::mat&Data,const arma::mat&rules,const double&Tol,const arma::mat&beta,const double&theta,const arma::mat&gamma,
+                    const double&Tol2,const double&TheConst){
+    if(Indicator<=beta.n_rows){
+        
+    }
+}
 
 
 
